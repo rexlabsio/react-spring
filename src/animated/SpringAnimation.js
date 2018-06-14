@@ -1,10 +1,15 @@
 import Animation from './Animation'
 import * as Globals from './Globals'
+import {
+  tension_from_origami_value,
+  friction_from_origami_value,
+  calc_acceleration
+} from "../wasm/wasm";
 
 const withDefault = (value, defaultValue) =>
   value === undefined || value === null ? defaultValue : value
-const tensionFromOrigamiValue = oValue => (oValue - 30) * 3.62 + 194
-const frictionFromOrigamiValue = oValue => (oValue - 8) * 3 + 25
+const tensionFromOrigamiValue = oValue => tension_from_origami_value(oValue);
+const frictionFromOrigamiValue = oValue => friction_from_origami_value(oValue);
 const fromOrigamiTensionAndFriction = (tension, friction) => ({
   tension: tensionFromOrigamiValue(tension),
   friction: frictionFromOrigamiValue(friction),
@@ -91,27 +96,23 @@ export default class SpringAnimation extends Animation {
       // This is using RK4. A good blog post to understand how it works:
       // http://gafferongames.com/game-physics/integration-basics/
       var aVelocity = velocity
-      var aAcceleration =
-        this._tension * (this._to - tempPosition) -
-        this._friction * tempVelocity
+      var aAcceleration = calc_acceleration(this._tension, this._to, tempPosition, this._friction, tempVelocity);
+
       var tempPosition = position + aVelocity * step / 2
       var tempVelocity = velocity + aAcceleration * step / 2
       var bVelocity = tempVelocity
-      var bAcceleration =
-        this._tension * (this._to - tempPosition) -
-        this._friction * tempVelocity
+      var bAcceleration = calc_acceleration(this._tension, this._to, tempPosition, this._friction, tempVelocity);
+
       tempPosition = position + bVelocity * step / 2
       tempVelocity = velocity + bAcceleration * step / 2
       var cVelocity = tempVelocity
-      var cAcceleration =
-        this._tension * (this._to - tempPosition) -
-        this._friction * tempVelocity
+      var cAcceleration = calc_acceleration(this._tension, this._to, tempPosition, this._friction, tempVelocity);
+
       tempPosition = position + cVelocity * step / 2
       tempVelocity = velocity + cAcceleration * step / 2
       var dVelocity = tempVelocity
-      var dAcceleration =
-        this._tension * (this._to - tempPosition) -
-        this._friction * tempVelocity
+      var dAcceleration = calc_acceleration(this._tension, this._to, tempPosition, this._friction, tempVelocity);
+
       tempPosition = position + cVelocity * step / 2
       tempVelocity = velocity + cAcceleration * step / 2
       var dxdt = (aVelocity + 2 * (bVelocity + cVelocity) + dVelocity) / 6
