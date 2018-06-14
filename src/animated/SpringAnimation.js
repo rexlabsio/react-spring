@@ -3,13 +3,15 @@ import * as Globals from './Globals'
 import {
   tension_from_origami_value,
   friction_from_origami_value,
-  calc_acceleration
-} from "../wasm/wasm";
+  calc_acceleration,
+  Foo,
+  PosVel,
+} from '../wasm/wasm'
 
 const withDefault = (value, defaultValue) =>
   value === undefined || value === null ? defaultValue : value
-const tensionFromOrigamiValue = oValue => tension_from_origami_value(oValue);
-const frictionFromOrigamiValue = oValue => friction_from_origami_value(oValue);
+const tensionFromOrigamiValue = oValue => tension_from_origami_value(oValue)
+const frictionFromOrigamiValue = oValue => friction_from_origami_value(oValue)
 const fromOrigamiTensionAndFriction = (tension, friction) => ({
   tension: tensionFromOrigamiValue(tension),
   friction: frictionFromOrigamiValue(friction),
@@ -89,39 +91,24 @@ export default class SpringAnimation extends Animation {
     var TIMESTEP_MSEC = 1
     var numSteps = Math.floor((now - this._lastTime) / TIMESTEP_MSEC)
 
-    for (var i = 0; i < numSteps; ++i) {
-      // Velocity is based on seconds instead of milliseconds
-      var step = TIMESTEP_MSEC / 1000
+    // var foo = Foo.new();
+    // console.log(foo.add(1));
+    var pv = PosVel.new()
 
-      // This is using RK4. A good blog post to understand how it works:
-      // http://gafferongames.com/game-physics/integration-basics/
-      var aVelocity = velocity
-      var aAcceleration = calc_acceleration(this._tension, this._to, tempPosition, this._friction, tempVelocity);
+    var t0 = performance.now()
+    pv.rk4(
+      this._lastPosition,
+      this._lastVelocity,
+      numSteps,
+      this._friction,
+      this._tension,
+      this._to
+    )
+    position = pv.get_pos()
+    velocity = pv.get_vel()
 
-      var tempPosition = position + aVelocity * step / 2
-      var tempVelocity = velocity + aAcceleration * step / 2
-      var bVelocity = tempVelocity
-      var bAcceleration = calc_acceleration(this._tension, this._to, tempPosition, this._friction, tempVelocity);
-
-      tempPosition = position + bVelocity * step / 2
-      tempVelocity = velocity + bAcceleration * step / 2
-      var cVelocity = tempVelocity
-      var cAcceleration = calc_acceleration(this._tension, this._to, tempPosition, this._friction, tempVelocity);
-
-      tempPosition = position + cVelocity * step / 2
-      tempVelocity = velocity + cAcceleration * step / 2
-      var dVelocity = tempVelocity
-      var dAcceleration = calc_acceleration(this._tension, this._to, tempPosition, this._friction, tempVelocity);
-
-      tempPosition = position + cVelocity * step / 2
-      tempVelocity = velocity + cAcceleration * step / 2
-      var dxdt = (aVelocity + 2 * (bVelocity + cVelocity) + dVelocity) / 6
-      var dvdt =
-        (aAcceleration + 2 * (bAcceleration + cAcceleration) + dAcceleration) /
-        6
-      position += dxdt * step
-      velocity += dvdt * step
-    }
+    var t1 = performance.now()
+    console.log('wasm loop took ' + (t1 - t0) + ' milliseconds.')
 
     this._lastTime = now
     this._lastPosition = position

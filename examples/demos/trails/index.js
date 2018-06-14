@@ -3,7 +3,13 @@ import { Trail, animated } from 'react-spring'
 import './styles.css'
 
 export default class TrailsExample extends React.PureComponent {
-  state = { toggle: true, items: ['item1', 'item2', 'item3', 'item4', 'item5'] }
+  constructor(props) {
+    super(props)
+    this.state = { toggle: true, items: [] }
+    for (let i = 1; i < 5; i++) {
+      this.state.items.push('item' + i)
+    }
+  }
   toggle = () => this.setState(state => ({ toggle: !state.toggle }))
   render() {
     const { toggle, items } = this.state

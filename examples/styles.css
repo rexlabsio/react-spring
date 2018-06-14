@@ -47,7 +47,6 @@ ul {
 
 .app-container > * {
     position: relative;
-    overflow: hidden;
     min-height: 0;
     min-height: 0;
 }

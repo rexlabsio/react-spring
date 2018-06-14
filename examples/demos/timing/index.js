@@ -3,7 +3,13 @@ import { Spring, Keyframes, animated } from 'react-spring'
 import { TimingAnimation, Easing } from '../../../src/addons'
 
 export default class TimingExample extends React.PureComponent {
-  state = { items: ['item1', 'item2', 'item3'] }
+  constructor(props) {
+    super(props)
+    this.state = { items: [] }
+    for (let i = 1; i < 1000; i++) {
+      this.state.items.push('item' + i)
+    }
+  }
 
   render() {
     const Content = ({ radians, color }) =>
@@ -40,7 +46,7 @@ export default class TimingExample extends React.PureComponent {
           native
           keys={items}
           impl={TimingAnimation}
-          config={{ duration: 2000, easing: Easing.linear }}
+          config={{ duration: 500, easing: Easing.linear }}
           script={async next => {
             while (true) {
               await next(Spring, {
